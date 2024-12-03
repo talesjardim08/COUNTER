@@ -3,8 +3,7 @@ const mysql = require('mysql2'); // Importa o módulo responsável pela conexão
 const app = express(); // Cria uma instância do express para configurar o servidor
 const port = process.env.PORT || 3000;
 
-
-app.use(express.json());
+app.use(express.json()); // Permite que o Express aceite requisições no formato JSON
 
 // Configuração da conexão com o banco de dados
 const db = mysql.createConnection({
@@ -17,13 +16,13 @@ const db = mysql.createConnection({
 // Estabelece a conexão com o banco de dados
 db.connect((err) => {
     if (err) {
-        console.error('Erro ao conectar ao Banco de Dados:', err.stack);
-        return; // Sai da função em caso de erro
+        console.error('Erro ao conectar ao Banco de Dados:', err.stack); // Exibe erro se falhar
+        return;
     }
-    console.log('Conexão feita com sucesso ao Banco de Dados');
+    console.log('Conexão feita com sucesso ao Banco de Dados'); // Mensagem de sucesso
 });
 
-// Define uma rota GET simples para testar o servidor
+// Rota GET simples para testar se o servidor está funcionando
 app.get('/', (req, res) => {
     res.send('Servidor Funcionando: VAI PALMEIRAS! Meu primeiro servidor BACK-END');
 });
@@ -59,6 +58,19 @@ app.post('/login', (req, res) => {
             });
         } else {
             res.status(401).send('Credenciais inválidas'); // Retorna erro se o login falhar
+        }
+    });
+});
+
+// Rota para verificar a conexão com o banco de dados
+app.get('/conectar', (req, res) => {
+    db.ping((err) => {  // Método ping para testar a conexão ativa com o banco
+        if (err) {
+            console.error('Erro ao conectar ao banco de dados:', err);
+            res.status(500).json({ message: 'Erro ao conectar ao banco de dados', error: err });
+        } else {
+            console.log('Conexão com o banco de dados está ativa');
+            res.status(200).json({ message: 'Conexão com o banco de dados bem-sucedida!' });
         }
     });
 });
