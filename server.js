@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 
 // Rota para cadastrar ou atualizar as preferências do usuário
 app.post('/preferencias', (req, res) => {
-    const { id_user, escala_vicio, tempo_gasto, genero_jogo } = req.body; // Desestrutura os dados enviados pelo cliente
+    const { id_user, escala_vicio, tempo_gasto, genero_jogo } = req.body;
     const query = 'UPDATE usuario SET Escala_vicio = ?, tempo_gasto = ?, Genero_jogo = ? WHERE id_user = ?';
 
     db.query(query, [escala_vicio, tempo_gasto, genero_jogo, id_user], (err, results) => {
@@ -39,6 +39,26 @@ app.post('/preferencias', (req, res) => {
             res.status(500).send('Erro ao atualizar preferências');
         } else {
             res.send('Preferências atualizadas com sucesso');
+        }
+    });
+});
+
+// Rota para login
+app.post('/login', (req, res) => {
+    const { email, senha } = req.body; // Recebe as credenciais do cliente
+    const query = 'SELECT * FROM usuario WHERE email = ? AND Senha = ?';
+
+    db.query(query, [email, senha], (err, results) => {
+        if (err) {
+            console.error('Erro ao realizar login:', err);
+            res.status(500).send('Erro ao realizar login');
+        } else if (results.length > 0) {
+            res.status(200).json({
+                message: 'Login bem-sucedido',
+                user: results[0] // Retorna as informações do usuário logado
+            });
+        } else {
+            res.status(401).send('Credenciais inválidas'); // Retorna erro se o login falhar
         }
     });
 });
