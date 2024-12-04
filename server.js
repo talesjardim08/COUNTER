@@ -75,6 +75,26 @@ app.get('/conectar', (req, res) => {
     });
 });
 
+app.post('/cadastro', (req, res) => {
+    const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
+
+    const query = `
+        INSERT INTO usuario 
+        (Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
+        if (err) {
+            console.error('Erro ao cadastrar usuário:', err);
+            res.status(500).send('Erro ao cadastrar usuário');
+        } else {
+            res.status(201).send('Usuário cadastrado com sucesso');
+        }
+    });
+});
+
+
 // Inicia o servidor na porta especificada
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
