@@ -1,32 +1,85 @@
-const express = require('express');
-const mysql = require('mysql');
-const bodyParser = require('body-parser');
+const express = require('express'); // Framework para criar o servidor
+const cors = require('cors'); // Middleware para gerenciar permissões de origem cruzada
+const mysql = require('mysql2'); // Biblioteca para conectar ao banco de dados
+// Removido bcryptjs pois não será mais necessário
+const app = express(); // Inicializa o servidor
 
-// Configuração do servidor
-const app = express();
-app.use(bodyParser.json());
+const port = process.env.PORT || 10000; // Porta do servidor
 
-// Configuração do banco de dados
+// Middleware para gerenciar CORS
+app.use(cors()); // Permite requisições de qualquer origem
+app.use(express.json()); // Permite que o Express processe requisições no formato JSON
+
+// Configuração da conexão com o banco de dados
 const db = mysql.createConnection({
-    host: 'localhost',  // Substitua pelo seu host
-    user: 'root',       // Substitua pelo seu usuário
-    password: '',       // Substitua pela sua senha
-    database: 'counter' // Substitua pelo nome do seu banco de dados
+    host: 'mysql-counter.alwaysdata.net',
+    user: 'counter',
+    password: 'Tj120408@',
+    database: 'counter_projeto',
 });
 
+// Estabelece a conexão com o banco
 db.connect((err) => {
     if (err) {
-        console.error('Erro ao conectar ao banco de dados:', err);
-        process.exit(1);
+        console.error('Erro ao conectar ao Banco de Dados:', err.stack);
+        return;
     }
-    console.log('Conectado ao banco de dados');
+    console.log('Conexão feita com sucesso ao Banco de Dados');
+});
+
+// Rota inicial de teste
+app.get('/', (req, res) => {
+    res.send('Servidor Funcionando: VAI PALMEIRAS! Meu primeiro servidor BACK-END');
+});
+
+// Rota para verificar a conexão com o banco
+app.get('/conectar', (req, res) => {
+    db.ping((err) => {
+        if (err) {
+            console.error('Erro ao conectar ao banco de dados:', err);
+            res.status(500).json({ message: 'Erro ao conectar ao banco de dados', error: err });
+        } else {
+            console.log('Conexão com o banco de dados está ativa');
+            res.status(200).json({ message: 'Conexão com o banco de dados bem-sucedida!' });
+        }
+    });
+});
+
+// Rota para login
+app.post('/login', (req, res) => {
+    const { email, senha } = req.body;
+    if (!email || !senha) {
+        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+    }
+
+    const query = 'SELECT * FROM usuario WHERE email = ?';
+
+    db.query(query, [email], (err, results) => {
+        if (err) {
+            console.error('Erro ao realizar login:', err);
+            res.status(500).send('Erro ao realizar login');
+        } else if (results.length > 0) {
+            const user = results[0];
+            // Comparando a senha em texto simples
+            if (senha === user.Senha) {
+                res.status(200).json({
+                    message: 'Login bem-sucedido',
+                    user: user, 
+                });
+            } else {
+                res.status(401).send('Credenciais inválidas');
+            }
+        } else {
+            res.status(401).send('Credenciais inválidas');
+        }
+    });
 });
 
 // Rota para cadastro de usuário sem bcryptjs (sem criptografar a senha)
 app.post('/cadastro', (req, res) => {
     const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
-
-    // Validações dos campos obrigatórios
+    
+    // Verificando se os campos estão presentes
     if (!Nome_Completo || !email || !senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
     }
@@ -41,7 +94,7 @@ app.post('/cadastro', (req, res) => {
         return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
     }
 
-    // Insersão do Usuario no banco mas sem a senha criptográfada 
+    // Armazenar a senha sem criptografia (não recomendado)
     const query = `
         INSERT INTO usuario 
         (Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo) 
@@ -52,15 +105,33 @@ app.post('/cadastro', (req, res) => {
     db.query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
         if (err) {
             console.error('Erro ao cadastrar usuário:', err);
-            res.status(500).json({ message: 'Erro ao cadastrar usuário' });
+            return res.status(500).json({ message: 'Erro ao cadastrar usuário' });
+        }
+        res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
+    });
+});
+
+// Rota para atualizar preferências do usuário
+app.post('/preferencias', (req, res) => {
+    const { id_user, escala_vicio, tempo_gasto, genero_jogo } = req.body;
+
+    const query = `
+        UPDATE usuario 
+        SET Escala_vicio = ?, tempo_gasto = ?, Genero_jogo = ? 
+        WHERE id_user = ?
+    `;
+
+    db.query(query, [escala_vicio, tempo_gasto, genero_jogo, id_user], (err, results) => {
+        if (err) {
+            console.error('Erro ao atualizar preferências:', err);
+            res.status(500).send('Erro ao atualizar preferências');
         } else {
-            res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
+            res.send('Preferências atualizadas com sucesso');
         }
     });
 });
 
-// Definindo a porta para o servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+// Inicia o servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
