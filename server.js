@@ -43,6 +43,21 @@ app.get('/conectar', (req, res) => {
     });
 });
 
+// outra rota para verificar
+app.get('/check-database', (req, res) => {
+    db.ping((err) => {
+        if (err) {
+            console.error('Erro ao verificar a conexão com o banco de dados:', err);
+            return res.status(500).json({
+                message: 'Erro ao conectar ao banco de dados.',
+                details: err.message,
+            });
+        }
+        console.log('Conexão com o banco de dados está funcional');
+        res.status(200).json({ message: 'Banco de dados conectado com sucesso!' });
+    });
+});
+
 // Rota para login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
