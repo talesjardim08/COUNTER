@@ -48,6 +48,10 @@ app.get('/conectar', (req, res) => {
 // Rota para login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
+    if (!email || !senha) {
+        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+    }
+
     const query = 'SELECT * FROM usuario WHERE email = ?';
 
     db.query(query, [email], (err, results) => {
@@ -80,35 +84,43 @@ app.post('/login', (req, res) => {
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
     
+    // Verificando se os campos estão presentes
     if (!Nome_Completo || !email || !senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
     }
 
+    // Validação da escala de vício
     if (Escala_vicio < 1 || Escala_vicio > 10) {
         return res.status(400).json({ message: 'A escala de vício deve ser entre 1 e 10.' });
     }
 
+    // Validação do tempo gasto
     if (isNaN(tempo_gasto) || tempo_gasto <= 0) {
         return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
     }
 
-    // Criptografar a senha antes de salvar no banco
-    const hashedSenha = await bcrypt.hash(senha, 10);
+    try {
+        // Criptografar a senha antes de salvar no banco
+        const hashedSenha = await bcrypt.hash(senha, 10);
 
-    const query = `
-        INSERT INTO usuario 
-        (Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
+        // Inserir usuário no banco de dados
+        const query = `
+            INSERT INTO usuario 
+            (Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
 
-    db.query(query, [Nome_Completo, email, hashedSenha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
-        if (err) {
-            console.error('Erro ao cadastrar usuário:', err);
-            res.status(500).json({ message: 'Erro ao cadastrar usuário' });
-        } else {
+        db.query(query, [Nome_Completo, email, hashedSenha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
+            if (err) {
+                console.error('Erro ao cadastrar usuário:', err);
+                return res.status(500).json({ message: 'Erro ao cadastrar usuário' });
+            }
             res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Erro ao criptografar a senha:', error);
+        res.status(500).json({ message: 'Erro ao cadastrar usuário' });
+    }
 });
 
 // Rota para atualizar preferências do usuário
