@@ -89,6 +89,7 @@ app.post('/cadastro', async (req, res) => {
         return res.status(400).json({ message: 'A escala de vício deve ser entre 1 e 10.' });
     }
 
+    // Verificando se tempo_gasto é um número
     if (isNaN(tempo_gasto) || tempo_gasto <= 0) {
         return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
     }
@@ -100,11 +101,11 @@ app.post('/cadastro', async (req, res) => {
     `;
 
     try {
-        const [results] = await db.promise().query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
+        const [results] = await db.promise().query(query, [Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
         res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
     } catch (err) {
         console.error('Erro ao cadastrar usuário:', err);  
-    res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
+        res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
     }
 });
 
