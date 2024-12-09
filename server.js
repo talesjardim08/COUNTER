@@ -46,34 +46,33 @@ app.get('/conectar', (req, res) => {
 
 // Rota para login
 app.post('/login', (req, res) => {
-    const { email, senha } = req.body;
+    const { email, senha } = req.body; // Recebe o email e a senha da requisição
+
+    // Verificar se os dados foram enviados
     if (!email || !senha) {
-        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+        return res.status(400).json({ message: 'Por favor, envie email e senha.' });
     }
 
+    // Consulta ao banco de dados
     const query = 'SELECT * FROM usuario WHERE email = ?';
-
     db.query(query, [email], (err, results) => {
         if (err) {
-            console.error('Erro ao realizar login:', err.message);
-            return res.status(500).json({ message: 'Erro ao realizar login', error: err.message });
-        } else if (results.length > 0) {
-            const user = results[0];
-            // Comparando a senha em texto simples
-            if (senha === user.Senha) {
-                res.status(200).json({
-                    message: 'Login bem-sucedido',
-                    user: user,
-                });
+            console.error('Erro no banco:', err.message);
+            return res.status(500).json({ message: 'Erro ao acessar o banco' });
+        }
+
+        if (results.length > 0) {
+            const user = results[0]; // Recupera o usuário
+            if (senha === user.Senha) { // Verifica se a senha bate
+                res.status(200).json({ message: 'Login bem-sucedido', user });
             } else {
-                res.status(401).json({ message: 'Credenciais inválidas' });
+                res.status(401).json({ message: 'Senha incorreta' });
             }
         } else {
-            res.status(401).json({ message: 'Credenciais inválidas' });
+            res.status(404).json({ message: 'Usuário não encontrado' });
         }
     });
 });
-
 // Rota para cadastro de usuário
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
