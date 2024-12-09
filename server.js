@@ -45,34 +45,21 @@ app.get('/conectar', (req, res) => {
 });
 
 // Rota para login
-app.post('/login', (req, res) => {
-    const { email, senha } = req.body; // Recebe o email e a senha da requisição
-
-    // Verificar se os dados foram enviados
-    if (!email || !senha) {
-        return res.status(400).json({ message: 'Por favor, envie email e senha.' });
+const query = 'SELECT * FROM usuario WHERE email = ? AND LOWER(senha) = LOWER(?)'; 
+db.query(query, [email, senha], (err, results) => {
+    if (err) {
+        console.error('Erro no banco:', err.message);
+        return res.status(500).json({ message: 'Erro ao acessar o banco' });
     }
 
-    // Consulta ao banco de dados
-    const query = 'SELECT * FROM usuario WHERE email = ?';
-    db.query(query, [email], (err, results) => {
-        if (err) {
-            console.error('Erro no banco:', err.message);
-            return res.status(500).json({ message: 'Erro ao acessar o banco' });
-        }
-
-        if (results.length > 0) {
-            const user = results[0]; // Recupera o usuário
-            if (senha === user.Senha) { // Verifica se a senha bate
-                res.status(200).json({ message: 'Login bem-sucedido', user });
-            } else {
-                res.status(401).json({ message: 'Senha incorreta' });
-            }
-        } else {
-            res.status(404).json({ message: 'Usuário não encontrado' });
-        }
-    });
+    if (results.length > 0) {
+        const user = results[0];
+        res.status(200).json({ message: 'Login bem-sucedido', user });  
+    } else {
+        res.status(401).json({ message: 'Email ou senha incorretos' }); 
+    }
 });
+
 // Rota para cadastro de usuário
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
