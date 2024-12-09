@@ -76,12 +76,12 @@ app.post('/login', (req, res) => {
 
 // Rota para cadastro de usuário sem criptografar a senha
 app.post('/cadastro', async (req, res) => {
-    const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
+    const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
     
     console.log('Dados recebidos:', req.body); // Log dos dados recebidos
 
     // Verificando se os campos estão presentes
-    if (!Nome_Completo || !email || !senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
+    if (!Nome_Completo || !email || !Senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
     }
 
