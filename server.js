@@ -164,7 +164,7 @@ app.post('/objetivo', async (req, res) => {
   }
 
   const query = `
-    INSERT INTO objetivo 
+    INSERT INTO objetivos
     (id_rotinafk, descricao, data_i, data_c, status) 
     VALUES (?, ?, ?, ?, ?)
   `;
