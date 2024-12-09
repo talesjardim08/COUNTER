@@ -46,26 +46,22 @@ app.get('/conectar', (req, res) => {
 
 // Rota para login
 app.post('/login', (req, res) => {
-    const { email, senha } = req.body; // Recupera email e senha do corpo da requisição
+  const { email, senha } = req.body;
 
-    if (!email || !senha) {
-        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+  const query = 'SELECT * FROM usuario WHERE email = ? AND LOWER(senha) = LOWER(?)'; 
+  db.query(query, [email, senha], (err, results) => {
+    if (err) {
+      console.error('Erro no banco:', err.message);
+      return res.status(500).json({ success: false, message: 'Erro ao acessar o banco' });
     }
 
-    const query = 'SELECT * FROM usuario WHERE email = ? AND LOWER(senha) = LOWER(?)'; 
-    db.query(query, [email, senha], (err, results) => {
-        if (err) {
-            console.error('Erro no banco:', err.message);
-            return res.status(500).json({ message: 'Erro ao acessar o banco' });
-        }
-
-        if (results.length > 0) {
-            const user = results[0];
-            res.status(200).json({ message: 'Login bem-sucedido', user });  
-        } else {
-            res.status(401).json({ message: 'Email ou senha incorretos' }); 
-        }
-    });
+    if (results.length > 0) {
+      const user = results[0];
+      res.status(200).json({ success: true, message: 'Login bem-sucedido', user });  
+    } else {
+      res.status(401).json({ success: false, message: 'Email ou senha incorretos' }); 
+    }
+  });
 });
 
 // Rota para cadastro de usuário
