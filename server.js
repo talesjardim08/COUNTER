@@ -153,6 +153,30 @@ app.post('/preferencias', async (req, res) => {
     }
 });
 
+// rota para adicionar os objetivos
+app.post('/objetivo', async (req, res) => {
+  const { id_rotinafk, descricao, data_i, data_c, status } = req.body;
+
+  if (!id_rotinafk || !descricao || !data_i || !data_c || !status) {
+    return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+  }
+
+  const query = `
+    INSERT INTO objetivo 
+    (id_rotinafk, descricao, data_i, data_c, status) 
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  try {
+    const [results] = await db.promise().query(query, [id_rotinafk, descricao, data_i, data_c, status]);
+    res.status(201).json({ message: 'Objetivo cadastrado com sucesso', objetivo_id: results.insertId });
+  } catch (err) {
+    console.error('Erro ao adicionar objetivo:', err);
+    res.status(500).json({ message: 'Erro ao adicionar objetivo', error: err });
+  }
+});
+
+
 // Inicia o servidor
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
