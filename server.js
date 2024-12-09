@@ -10,10 +10,10 @@ app.use(express.json()); // Permite que o Express processe requisições no form
 
 // Configuração da conexão com o banco de dados
 const db = mysql.createConnection({
-    host: 'sql213.infinityfree.com',
-    user: 'if0_37838629',
-    password: 'COUNTER2024',
-    database: 'if0_37838629_counter',
+    host: 'mysql-counter.alwaysdata.net',
+    user: 'counter',
+    password: 'Tj120408@',
+    database: 'counter_projeto',
 });
 
 // Estabelece a conexão com o banco
