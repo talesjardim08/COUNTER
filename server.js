@@ -45,19 +45,27 @@ app.get('/conectar', (req, res) => {
 });
 
 // Rota para login
-const query = 'SELECT * FROM usuario WHERE email = ? AND LOWER(senha) = LOWER(?)'; 
-db.query(query, [email, senha], (err, results) => {
-    if (err) {
-        console.error('Erro no banco:', err.message);
-        return res.status(500).json({ message: 'Erro ao acessar o banco' });
+app.post('/login', (req, res) => {
+    const { email, senha } = req.body; // Recupera email e senha do corpo da requisição
+
+    if (!email || !senha) {
+        return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
     }
 
-    if (results.length > 0) {
-        const user = results[0];
-        res.status(200).json({ message: 'Login bem-sucedido', user });  
-    } else {
-        res.status(401).json({ message: 'Email ou senha incorretos' }); 
-    }
+    const query = 'SELECT * FROM usuario WHERE email = ? AND LOWER(senha) = LOWER(?)'; 
+    db.query(query, [email, senha], (err, results) => {
+        if (err) {
+            console.error('Erro no banco:', err.message);
+            return res.status(500).json({ message: 'Erro ao acessar o banco' });
+        }
+
+        if (results.length > 0) {
+            const user = results[0];
+            res.status(200).json({ message: 'Login bem-sucedido', user });  
+        } else {
+            res.status(401).json({ message: 'Email ou senha incorretos' }); 
+        }
+    });
 });
 
 // Rota para cadastro de usuário
@@ -139,33 +147,31 @@ app.post('/preferencias', async (req, res) => {
     }
 });
 
-// rota para adicionar os objetivos
+// Rota para adicionar os objetivos
 app.post('/objetivo', async (req, res) => {
-  const { id_rotinafk, descricao, data_i, data_c, status } = req.body;
+    const { id_rotinafk, descricao, data_i, data_c, status } = req.body;
 
-  console.log('Dados recebidos para objetivo:', req.body);  // Verificar os dados
+    console.log('Dados recebidos para objetivo:', req.body);  // Verificar os dados
 
-  if (!id_rotinafk || !descricao || !data_i || !data_c || !status) {
-    return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
-  }
+    if (!id_rotinafk || !descricao || !data_i || !data_c || !status) {
+        return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+    }
 
-  const query = `
-    INSERT INTO objetivos
-    (id_rotinafk, descricao, data_i, data_c, status) 
-    VALUES (?, ?, ?, ?, ?)
-  `;
+    const query = `
+        INSERT INTO objetivos
+        (id_rotinafk, descricao, data_i, data_c, status) 
+        VALUES (?, ?, ?, ?, ?)
+    `;
 
-  try {
-    const [results] = await db.promise().query(query, [id_rotinafk, descricao, data_i, data_c, status]);
-    console.log('Objetivo inserido com sucesso', results);  
-    res.status(201).json({ message: 'Objetivo cadastrado com sucesso', objetivo_id: results.insertId });
-  } catch (err) {
-    console.error('Erro ao adicionar objetivo:', err.message);  
-    res.status(500).json({ message: 'Erro ao adicionar objetivo', error: err.message });
-  }
+    try {
+        const [results] = await db.promise().query(query, [id_rotinafk, descricao, data_i, data_c, status]);
+        console.log('Objetivo inserido com sucesso', results);  
+        res.status(201).json({ message: 'Objetivo cadastrado com sucesso', objetivo_id: results.insertId });
+    } catch (err) {
+        console.error('Erro ao adicionar objetivo:', err.message);  
+        res.status(500).json({ message: 'Erro ao adicionar objetivo', error: err.message });
+    }
 });
-
-
 
 // Inicia o servidor
 app.listen(port, () => {
