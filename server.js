@@ -157,6 +157,8 @@ app.post('/preferencias', async (req, res) => {
 app.post('/objetivo', async (req, res) => {
   const { id_rotinafk, descricao, data_i, data_c, status } = req.body;
 
+  console.log('Dados recebidos para objetivo:', req.body);  // Verificar os dados
+
   if (!id_rotinafk || !descricao || !data_i || !data_c || !status) {
     return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
@@ -169,12 +171,14 @@ app.post('/objetivo', async (req, res) => {
 
   try {
     const [results] = await db.promise().query(query, [id_rotinafk, descricao, data_i, data_c, status]);
+    console.log('Objetivo inserido com sucesso', results);  
     res.status(201).json({ message: 'Objetivo cadastrado com sucesso', objetivo_id: results.insertId });
   } catch (err) {
-    console.error('Erro ao adicionar objetivo:', err);
-    res.status(500).json({ message: 'Erro ao adicionar objetivo', error: err });
+    console.error('Erro ao adicionar objetivo:', err.message);  
+    res.status(500).json({ message: 'Erro ao adicionar objetivo', error: err.message });
   }
 });
+
 
 
 // Inicia o servidor
