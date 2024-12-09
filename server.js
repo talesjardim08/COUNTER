@@ -77,10 +77,9 @@ app.post('/login', (req, res) => {
 // Rota para cadastro de usuário sem criptografar a senha
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
-    
-    console.log('Dados recebidos:', req.body); // Log dos dados recebidos
 
-    // Verificando se os campos estão presentes
+    console.log('Dados recebidos:', req.body);
+
     if (!Nome_Completo || !email || !Senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
     }
@@ -89,7 +88,6 @@ app.post('/cadastro', async (req, res) => {
         return res.status(400).json({ message: 'A escala de vício deve ser entre 1 e 10.' });
     }
 
-    // Verificando se tempo_gasto é um número
     if (isNaN(tempo_gasto) || tempo_gasto <= 0) {
         return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
     }
@@ -102,12 +100,34 @@ app.post('/cadastro', async (req, res) => {
 
     try {
         const [results] = await db.promise().query(query, [Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
-        res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
+        const id_user = results.insertId;
+        res.status(201).json({ message: 'Usuário cadastrado com sucesso', id_user });
     } catch (err) {
         console.error('Erro ao cadastrar usuário:', err);  
         res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
     }
 });
+
+// Rota para adicionar rotina
+app.post('/rotina', async (req, res) => {
+    const { id_user, descricao, horario, duracao } = req.body;
+
+    if (!id_user || !descricao || !horario || !duracao) {
+        return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+    }
+
+    const query = `
+        INSERT INTO rotina 
+        (id_userfk, descricao, horario, duracao) 
+        VALUES (?, ?, ?, ?)
+    `;
+
+    try {
+        const [results] = await db.promise().query(query, [id_user, descricao, horario, duracao]);
+        res.status(201).json({ message: 'Rotina adicionada com sucesso', rotina_id: results.insertId });
+    } catch (err) {
+        console.error('Erro ao adicionar rotina:', err);
+        res.status(500).json({ message: 'Erro ao adicionar rotina', error: err });
 
 // Rota para atualizar preferências do usuário
 app.post('/preferencias', (req, res) => {
