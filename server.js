@@ -1,7 +1,6 @@
 const express = require('express'); // Framework para criar o servidor
 const cors = require('cors'); // Middleware para gerenciar permissões de origem cruzada
 const mysql = require('mysql2'); // Biblioteca para conectar ao banco de dados
-// Removido bcryptjs pois não será mais necessário
 const app = express(); // Inicializa o servidor
 
 const port = process.env.PORT || 10000; // Porta do servidor
@@ -37,7 +36,7 @@ app.get('/conectar', (req, res) => {
     db.ping((err) => {
         if (err) {
             console.error('Erro ao conectar ao banco de dados:', err);
-            res.status(500).json({ message: 'Erro ao conectar ao banco de dados', error: err });
+            res.status(500).json({ message: 'Erro ao conectar ao banco de dados', error: err.message });
         } else {
             console.log('Conexão com o banco de dados está ativa');
             res.status(200).json({ message: 'Conexão com o banco de dados bem-sucedida!' });
@@ -56,8 +55,8 @@ app.post('/login', (req, res) => {
 
     db.query(query, [email], (err, results) => {
         if (err) {
-            console.error('Erro ao realizar login:', err);
-            res.status(500).send('Erro ao realizar login');
+            console.error('Erro ao realizar login:', err.message);
+            return res.status(500).json({ message: 'Erro ao realizar login', error: err.message });
         } else if (results.length > 0) {
             const user = results[0];
             // Comparando a senha em texto simples
@@ -67,48 +66,46 @@ app.post('/login', (req, res) => {
                     user: user, 
                 });
             } else {
-                res.status(401).send('Credenciais inválidas');
+                res.status(401).json({ message: 'Credenciais inválidas' });
             }
         } else {
-            res.status(401).send('Credenciais inválidas');
+            res.status(401).json({ message: 'Credenciais inválidas' });
         }
     });
 });
 
-// Rota para cadastro de usuário sem bcryptjs (sem criptografar a senha)
-app.post('/cadastro', (req, res) => {
+// Rota para cadastro de usuário sem criptografar a senha
+app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
     
+    console.log('Dados recebidos:', req.body); // Log dos dados recebidos
+
     // Verificando se os campos estão presentes
     if (!Nome_Completo || !email || !senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
     }
 
-    // Validação da escala de vício
     if (Escala_vicio < 1 || Escala_vicio > 10) {
         return res.status(400).json({ message: 'A escala de vício deve ser entre 1 e 10.' });
     }
 
-    // Validação do tempo gasto
     if (isNaN(tempo_gasto) || tempo_gasto <= 0) {
         return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
     }
 
-    // Armazenar a senha sem criptografia (não recomendado)
     const query = `
         INSERT INTO usuario 
         (Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    // Executando a query
-    db.query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
-        if (err) {
-            console.error('Erro ao cadastrar usuário:', err);
-            return res.status(500).json({ message: 'Erro ao cadastrar usuário' });
-        }
+    try {
+        const [results] = await db.promise().query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
         res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
-    });
+    } catch (err) {
+        console.error('Erro ao cadastrar usuário:', err.message);
+        res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err.message });
+    }
 });
 
 // Rota para atualizar preferências do usuário
@@ -123,10 +120,10 @@ app.post('/preferencias', (req, res) => {
 
     db.query(query, [escala_vicio, tempo_gasto, genero_jogo, id_user], (err, results) => {
         if (err) {
-            console.error('Erro ao atualizar preferências:', err);
-            res.status(500).send('Erro ao atualizar preferências');
+            console.error('Erro ao atualizar preferências:', err.message);
+            res.status(500).json({ message: 'Erro ao atualizar preferências', error: err.message });
         } else {
-            res.send('Preferências atualizadas com sucesso');
+            res.status(200).json({ message: 'Preferências atualizadas com sucesso' });
         }
     });
 });
