@@ -1,6 +1,7 @@
 const express = require('express'); // Framework para criar o servidor
 const cors = require('cors'); // Middleware para gerenciar permissões de origem cruzada
 const mysql = require('mysql2'); // Biblioteca para conectar ao banco de dados
+const bcrypt = require('bcryptjs'); // Biblioteca para criptografar a senha
 const app = express(); // Inicializa o servidor
 
 const port = process.env.PORT || 10000; // Porta do servidor
@@ -44,34 +45,30 @@ app.get('/conectar', (req, res) => {
     });
 });
 
-// outra rota para verificar
-app.get('/check-database', (req, res) => {
-    db.ping((err) => {
-        if (err) {
-            console.error('Erro ao verificar a conexão com o banco de dados:', err);
-            return res.status(500).json({
-                message: 'Erro ao conectar ao banco de dados.',
-                details: err.message,
-            });
-        }
-        console.log('Conexão com o banco de dados está funcional');
-        res.status(200).json({ message: 'Banco de dados conectado com sucesso!' });
-    });
-});
-
 // Rota para login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
-    const query = 'SELECT * FROM usuario WHERE email = ? AND Senha = ?';
+    const query = 'SELECT * FROM usuario WHERE email = ?';
 
-    db.query(query, [email, senha], (err, results) => {
+    db.query(query, [email], (err, results) => {
         if (err) {
             console.error('Erro ao realizar login:', err);
             res.status(500).send('Erro ao realizar login');
         } else if (results.length > 0) {
-            res.status(200).json({
-                message: 'Login bem-sucedido',
-                user: results[0], // Retorna os dados do usuário
+            const user = results[0];
+            // Verifica se a senha informada confere com o hash armazenado
+            bcrypt.compare(senha, user.Senha, (err, isMatch) => {
+                if (err) {
+                    console.error('Erro ao comparar senha:', err);
+                    res.status(500).send('Erro ao realizar login');
+                } else if (isMatch) {
+                    res.status(200).json({
+                        message: 'Login bem-sucedido',
+                        user: user, 
+                    });
+                } else {
+                    res.status(401).send('Credenciais inválidas');
+                }
             });
         } else {
             res.status(401).send('Credenciais inválidas');
@@ -80,8 +77,23 @@ app.post('/login', (req, res) => {
 });
 
 // Rota para cadastro de usuário
-app.post('/cadastro', (req, res) => {
+app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
+    
+    if (!Nome_Completo || !email || !senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
+        return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
+    }
+
+    if (Escala_vicio < 1 || Escala_vicio > 10) {
+        return res.status(400).json({ message: 'A escala de vício deve ser entre 1 e 10.' });
+    }
+
+    if (isNaN(tempo_gasto) || tempo_gasto <= 0) {
+        return res.status(400).json({ message: 'O tempo gasto deve ser um número positivo.' });
+    }
+
+    // Criptografar a senha antes de salvar no banco
+    const hashedSenha = await bcrypt.hash(senha, 10);
 
     const query = `
         INSERT INTO usuario 
@@ -89,12 +101,12 @@ app.post('/cadastro', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
+    db.query(query, [Nome_Completo, email, hashedSenha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo], (err, results) => {
         if (err) {
             console.error('Erro ao cadastrar usuário:', err);
-            res.status(500).send('Erro ao cadastrar usuário');
+            res.status(500).json({ message: 'Erro ao cadastrar usuário' });
         } else {
-            res.status(201).send('Usuário cadastrado com sucesso');
+            res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
         }
     });
 });
