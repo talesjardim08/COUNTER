@@ -78,7 +78,7 @@ app.post('/login', (req, res) => {
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
 
-    console.log('Dados recebidos:', req.body);
+    console.log('Dados recebidos:', req.body); // Log para verificar os dados recebidos
 
     if (!Nome_Completo || !email || !Senha || !Data_Nasci || !Escala_vicio || !tempo_gasto || !Genero_jogo) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
@@ -101,6 +101,9 @@ app.post('/cadastro', async (req, res) => {
     try {
         const [results] = await db.promise().query(query, [Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
         const id_user = results.insertId;
+
+        console.log('ID do usuário inserido:', id_user); // Log para verificar o ID do usuário gerado
+
         res.status(201).json({ message: 'Usuário cadastrado com sucesso', id_user });
     } catch (err) {
         console.error('Erro ao cadastrar usuário:', err);
