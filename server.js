@@ -3,8 +3,7 @@ const cors = require('cors'); // Middleware para gerenciar permissões de origem
 const mysql = require('mysql2'); // Biblioteca para conectar ao banco de dados
 const app = express(); // Inicializa o servidor
 
-// Porta do servidor - usando a variável de ambiente ou 3000 como fallback
-const port = process.env.PORT || 3000; // Porta do servidor
+const port = process.env.PORT || 10000; // Porta do servidor
 
 // Middleware para gerenciar CORS
 app.use(cors()); // Permite requisições de qualquer origem
