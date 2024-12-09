@@ -63,7 +63,7 @@ app.post('/login', (req, res) => {
             if (senha === user.Senha) {
                 res.status(200).json({
                     message: 'Login bem-sucedido',
-                    user: user, 
+                    user: user,
                 });
             } else {
                 res.status(401).json({ message: 'Credenciais inválidas' });
@@ -74,7 +74,7 @@ app.post('/login', (req, res) => {
     });
 });
 
-// Rota para cadastro de usuário sem criptografar a senha
+// Rota para cadastro de usuário
 app.post('/cadastro', async (req, res) => {
     const { Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo } = req.body;
 
@@ -103,7 +103,7 @@ app.post('/cadastro', async (req, res) => {
         const id_user = results.insertId;
         res.status(201).json({ message: 'Usuário cadastrado com sucesso', id_user });
     } catch (err) {
-        console.error('Erro ao cadastrar usuário:', err);  
+        console.error('Erro ao cadastrar usuário:', err);
         res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
     }
 });
@@ -128,6 +128,8 @@ app.post('/rotina', async (req, res) => {
     } catch (err) {
         console.error('Erro ao adicionar rotina:', err);
         res.status(500).json({ message: 'Erro ao adicionar rotina', error: err });
+    }
+});
 
 // Rota para atualizar preferências do usuário
 app.post('/preferencias', (req, res) => {
