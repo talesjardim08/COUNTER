@@ -103,8 +103,8 @@ app.post('/cadastro', async (req, res) => {
         const [results] = await db.promise().query(query, [Nome_Completo, email, senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
         res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
     } catch (err) {
-        console.error('Erro ao cadastrar usuário:', err.message);
-        res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err.message });
+        console.error('Erro ao cadastrar usuário:', err);  
+    res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
     }
 });
 
