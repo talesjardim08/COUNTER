@@ -135,7 +135,7 @@ app.post('/rotina', async (req, res) => {
 });
 
 // Rota para atualizar preferências do usuário
-app.post('/preferencias', (req, res) => {
+app.post('/preferencias', async (req, res) => {
     const { id_user, escala_vicio, tempo_gasto, genero_jogo } = req.body;
 
     const query = `
@@ -144,14 +144,13 @@ app.post('/preferencias', (req, res) => {
         WHERE id_user = ?
     `;
 
-    db.query(query, [escala_vicio, tempo_gasto, genero_jogo, id_user], (err, results) => {
-        if (err) {
-            console.error('Erro ao atualizar preferências:', err.message);
-            res.status(500).json({ message: 'Erro ao atualizar preferências', error: err.message });
-        } else {
-            res.status(200).json({ message: 'Preferências atualizadas com sucesso' });
-        }
-    });
+    try {
+        const [results] = await db.promise().query(query, [escala_vicio, tempo_gasto, genero_jogo, id_user]);
+        res.status(200).json({ message: 'Preferências atualizadas com sucesso' });
+    } catch (err) {
+        console.error('Erro ao atualizar preferências:', err.message);
+        res.status(500).json({ message: 'Erro ao atualizar preferências', error: err.message });
+    }
 });
 
 // Inicia o servidor
