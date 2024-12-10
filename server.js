@@ -197,6 +197,41 @@ app.get('/informacoesUsuario/:id_user', (req, res) => {
   });
 });
 
+// Endpoint para obter os eventos de um usuário
+app.get('/eventosUsuario/:id_user', (req, res) => {
+  const { id_user } = req.params;
+
+  const query = `
+    SELECT c.data_evento, c.descricao_evento
+    FROM calendario c
+    JOIN rotina r ON c.id_rotinafk = r.id_rotina
+    JOIN objetivos o ON c.id_objetivofk = o.id_objetivo
+    WHERE r.id_userfk = ?
+    ORDER BY c.data_evento ASC;
+  `;
+
+  db.query(query, [id_user], (err, results) => {
+    if (err) {
+      console.error('Erro ao consultar eventos:', err);
+      return res.status(500).json({ error: 'Erro ao buscar eventos.' });
+    }
+
+    if (results.length > 0) {
+      const eventos = results.reduce((acc, row) => {
+        const dataEvento = row.data_evento.toISOString().split('T')[0]; 
+        if (!acc[dataEvento]) acc[dataEvento] = [];
+        acc[dataEvento].push(row.descricao_evento);
+        return acc;
+      }, {});
+
+      return res.json({ usuario: eventos });
+    } else {
+      return res.status(404).json({ error: 'Nenhum evento encontrado para esse usuário.' });
+    }
+  });
+});
+
+
 
 // Inicia o servidor
 app.listen(port, () => {
