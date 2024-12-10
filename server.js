@@ -169,6 +169,35 @@ app.post('/objetivo', async (req, res) => {
     }
 });
 
+app.get('/informacoesUsuario/:id_user', (req, res) => {
+  const { id_user } = req.params;
+
+  // Consultar as informações do usuário no banco, incluindo dados de rotina e objetivos
+  const query = `
+    SELECT u.Data_Nasci, u.Escala_vicio, u.tempo_gasto, r.descricao AS rotina_descricao, 
+           o.descricao AS objetivo_descricao
+    FROM usuario u
+    LEFT JOIN rotina r ON r.id_userfk = u.id_user
+    LEFT JOIN objetivos o ON o.id_rotinafk = r.id_rotina
+    WHERE u.id_user = ?
+  `;
+  
+  db.query(query, [id_user], (err, results) => {
+    if (err) {
+      console.error('Erro ao acessar o banco:', err.message);
+      return res.status(500).json({ success: false, message: 'Erro ao acessar as informações do usuário' });
+    }
+
+    if (results.length > 0) {
+      const usuario = results[0];  // Agora inclui informações da rotina e objetivo
+      res.status(200).json({ success: true, usuario });
+    } else {
+      res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+    }
+  });
+});
+
+
 // Inicia o servidor
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
