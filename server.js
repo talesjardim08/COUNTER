@@ -92,7 +92,7 @@ app.post('/cadastro', async (req, res) => {
         const [results] = await db.promise().query(query, [Nome_Completo, email, Senha, Data_Nasci, Escala_vicio, tempo_gasto, Genero_jogo]);
         const id_user = results.insertId;
 
-        console.log('ID do usuário inserido:', id_user); // Log para verificar o ID do usuário gerado
+        console.log('ID do usuário inserido:', id_user); 
 
         res.status(201).json({ message: 'Usuário cadastrado com sucesso', id_user });
     } catch (err) {
@@ -147,7 +147,7 @@ app.post('/preferencias', async (req, res) => {
 app.post('/objetivo', async (req, res) => {
     const { id_rotinafk, descricao, data_i, data_c, status } = req.body;
 
-    console.log('Dados recebidos para objetivo:', req.body);  // Verificar os dados
+    console.log('Dados recebidos para objetivo:', req.body);  
 
     if (!id_rotinafk || !descricao || !data_i || !data_c || !status) {
         return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
@@ -172,7 +172,6 @@ app.post('/objetivo', async (req, res) => {
 app.get('/informacoesUsuario/:id_user', (req, res) => {
   const { id_user } = req.params;
 
-  // Consultar as informações do usuário no banco, incluindo dados de rotina e objetivos
   const query = `
     SELECT u.Data_Nasci, u.Escala_vicio, u.tempo_gasto, r.descricao AS rotina_descricao, 
            o.descricao AS objetivo_descricao
@@ -189,7 +188,7 @@ app.get('/informacoesUsuario/:id_user', (req, res) => {
     }
 
     if (results.length > 0) {
-      const usuario = results[0];  // Agora inclui informações da rotina e objetivo
+      const usuario = results[0];  
       res.status(200).json({ success: true, usuario });
     } else {
       res.status(404).json({ success: false, message: 'Usuário não encontrado' });
